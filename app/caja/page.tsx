@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import QRCode from 'qrcode'
+import FlamingoLogo from '@/components/FlamingoLogo'
 import { supabase, generarCodigo, formatearPeso, type Cliente } from '@/lib/supabase'
 
 type Vista = 'buscar' | 'nuevo' | 'cliente'
@@ -28,7 +29,11 @@ export default function Caja() {
   useEffect(() => {
     if (clienteActivo && qrRef.current) {
       const url = `${window.location.origin}/cliente/${clienteActivo.id}`
-      QRCode.toCanvas(qrRef.current, url, { width: 220, margin: 2 })
+      QRCode.toCanvas(qrRef.current, url, {
+        width: 200,
+        margin: 2,
+        color: { dark: '#2C1A22', light: '#FAF6F1' }
+      })
     }
   }, [clienteActivo])
 
@@ -69,10 +74,7 @@ export default function Caja() {
     }
     setCargando(true)
     const nuevoSaldo = clienteActivo.saldo + montoNum
-    const { error: e1 } = await supabase
-      .from('clientes')
-      .update({ saldo: nuevoSaldo })
-      .eq('id', clienteActivo.id)
+    const { error: e1 } = await supabase.from('clientes').update({ saldo: nuevoSaldo }).eq('id', clienteActivo.id)
     if (e1) { setCargando(false); mostrarMensaje('Error al cargar saldo', 'error'); return }
     await supabase.from('transacciones').insert({
       cliente_id: clienteActivo.id,
@@ -83,7 +85,7 @@ export default function Caja() {
     setClienteActivo({ ...clienteActivo, saldo: nuevoSaldo })
     setMonto('')
     setCargando(false)
-    mostrarMensaje(`✓ ${formatearPeso(montoNum)} cargados correctamente`, 'ok')
+    mostrarMensaje(`${formatearPeso(montoNum)} cargados correctamente`, 'ok')
   }
 
   function mostrarMensaje(texto: string, tipo: 'ok' | 'error') {
@@ -98,45 +100,54 @@ export default function Caja() {
     setVista('cliente')
   }
 
+  const inputClass = "w-full rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 border"
+
   return (
-    <div className="min-h-screen" style={{ background: '#f8f4f0' }}>
+    <div className="min-h-screen" style={{ background: 'var(--cream)' }}>
       {/* Header */}
-      <div className="bg-pink-500 text-white px-5 py-4 flex items-center gap-3 shadow">
-        <Link href="/" className="text-white text-2xl">←</Link>
+      <div className="px-5 py-5 flex items-center gap-4 border-b" style={{ background: 'var(--charcoal)', borderColor: 'rgba(201,169,110,0.2)' }}>
+        <Link href="/" className="opacity-60 hover:opacity-100 transition-opacity">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="white">
+            <path d="M12 4l-6 6 6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          </svg>
+        </Link>
+        <FlamingoLogo size={32} />
         <div>
-          <h1 className="font-bold text-xl">💰 Caja</h1>
-          <p className="text-pink-100 text-sm">Registrar clientes y cargar saldo</p>
+          <h1 className="text-white font-semibold tracking-widest text-sm uppercase" style={{ fontFamily: 'var(--font-playfair)' }}>Caja</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(201,169,110,0.7)' }}>Clientes y saldo</p>
         </div>
       </div>
 
-      {/* Mensaje flotante */}
+      {/* Mensaje */}
       {mensaje && (
-        <div className={`mx-4 mt-4 p-4 rounded-xl font-semibold text-center ${mensaje.tipo === 'ok' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-600'}`}>
-          {mensaje.texto}
+        <div className={`mx-4 mt-4 px-5 py-4 rounded-xl text-sm font-medium text-center ${mensaje.tipo === 'ok' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+          {mensaje.tipo === 'ok' ? '✓ ' : '⚠ '}{mensaje.texto}
         </div>
       )}
 
-      <div className="p-4 max-w-lg mx-auto space-y-4">
+      <div className="p-4 max-w-lg mx-auto space-y-4 pb-10">
 
         {/* Tabs */}
         {vista !== 'cliente' && (
-          <div className="flex gap-2">
-            <button onClick={() => setVista('buscar')}
-              className={`flex-1 py-3 rounded-xl font-semibold transition-all ${vista === 'buscar' ? 'bg-pink-500 text-white shadow' : 'bg-white text-gray-600 border border-gray-200'}`}>
-              Buscar cliente
-            </button>
-            <button onClick={() => setVista('nuevo')}
-              className={`flex-1 py-3 rounded-xl font-semibold transition-all ${vista === 'nuevo' ? 'bg-pink-500 text-white shadow' : 'bg-white text-gray-600 border border-gray-200'}`}>
-              + Nuevo cliente
-            </button>
+          <div className="flex gap-2 p-1 rounded-xl" style={{ background: 'var(--cream-dark)' }}>
+            {(['buscar', 'nuevo'] as const).map((v) => (
+              <button key={v} onClick={() => setVista(v)}
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium transition-all"
+                style={vista === v
+                  ? { background: 'var(--charcoal)', color: 'white' }
+                  : { color: 'var(--muted)' }}>
+                {v === 'buscar' ? 'Buscar cliente' : '+ Nuevo cliente'}
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Buscar cliente */}
+        {/* Buscar */}
         {vista === 'buscar' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
+          <div className="space-y-3">
             <input
-              className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
+              className={inputClass}
+              style={{ borderColor: 'var(--cream-dark)', background: 'white', color: 'var(--charcoal)' }}
               placeholder="Buscar por nombre o teléfono..."
               value={busqueda}
               onChange={e => setBusqueda(e.target.value)}
@@ -144,81 +155,110 @@ export default function Caja() {
             />
             {clientes.map(c => (
               <button key={c.id} onClick={() => seleccionarCliente(c)}
-                className="w-full flex items-center justify-between bg-gray-50 hover:bg-pink-50 rounded-xl px-4 py-3 transition-all border border-transparent hover:border-pink-200">
-                <div className="text-left">
-                  <div className="font-semibold text-gray-800">{c.nombre} {c.apellido}</div>
-                  <div className="text-sm text-gray-400">{c.telefono || 'Sin teléfono'}</div>
+                className="w-full flex items-center justify-between bg-white hover:bg-rose-50 rounded-xl px-5 py-4 transition-all border text-left"
+                style={{ borderColor: 'var(--cream-dark)' }}>
+                <div>
+                  <div className="font-semibold" style={{ color: 'var(--charcoal)' }}>{c.nombre} {c.apellido}</div>
+                  <div className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>{c.telefono || 'Sin teléfono'}</div>
                 </div>
-                <div className="font-bold text-pink-500 text-lg">{formatearPeso(c.saldo)}</div>
+                <div className="font-bold text-base" style={{ color: 'var(--rose)' }}>{formatearPeso(c.saldo)}</div>
               </button>
             ))}
             {busqueda.length >= 2 && clientes.length === 0 && (
-              <p className="text-center text-gray-400 py-4">No encontrado. ¿Deseas registrarlo?</p>
+              <p className="text-center py-6 text-sm" style={{ color: 'var(--muted)' }}>
+                No encontrado — prueba con <button onClick={() => setVista('nuevo')} className="underline" style={{ color: 'var(--rose)' }}>registrar nuevo</button>
+              </p>
             )}
           </div>
         )}
 
         {/* Nuevo cliente */}
         {vista === 'nuevo' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
-            <h2 className="font-bold text-gray-700 text-lg">Datos del cliente</h2>
-            <input className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-              placeholder="Nombre *" value={nuevoNombre} onChange={e => setNuevoNombre(e.target.value)} />
-            <input className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-              placeholder="Apellido *" value={nuevoApellido} onChange={e => setNuevoApellido(e.target.value)} />
-            <input className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-pink-400"
-              placeholder="Teléfono (opcional)" type="tel" value={nuevoTel} onChange={e => setNuevoTel(e.target.value)} />
+          <div className="bg-white rounded-2xl border p-5 space-y-3" style={{ borderColor: 'var(--cream-dark)' }}>
+            <h2 className="font-semibold tracking-wide text-sm uppercase mb-4" style={{ color: 'var(--muted)', fontFamily: 'var(--font-playfair)' }}>
+              Datos del cliente
+            </h2>
+            {[
+              { placeholder: 'Nombre *', value: nuevoNombre, onChange: setNuevoNombre },
+              { placeholder: 'Apellido *', value: nuevoApellido, onChange: setNuevoApellido },
+              { placeholder: 'Teléfono (opcional)', value: nuevoTel, onChange: setNuevoTel },
+            ].map((f, i) => (
+              <input key={i}
+                className={inputClass}
+                style={{ borderColor: 'var(--cream-dark)', color: 'var(--charcoal)' }}
+                placeholder={f.placeholder}
+                value={f.value}
+                onChange={e => f.onChange(e.target.value)}
+                type={i === 2 ? 'tel' : 'text'}
+              />
+            ))}
             <button onClick={registrarCliente} disabled={cargando}
-              className="w-full bg-pink-500 hover:bg-pink-600 disabled:opacity-50 text-white font-bold py-4 rounded-2xl text-lg transition-all active:scale-95">
+              className="w-full py-4 rounded-xl font-semibold text-white transition-all active:scale-95 disabled:opacity-50 mt-2"
+              style={{ background: 'var(--rose)' }}>
               {cargando ? 'Registrando...' : 'Registrar cliente'}
             </button>
           </div>
         )}
 
-        {/* Panel cliente activo */}
+        {/* Cliente activo */}
         {vista === 'cliente' && clienteActivo && (
           <div className="space-y-4">
-            {/* Botón volver */}
             <button onClick={() => { setVista('buscar'); setClienteActivo(null) }}
-              className="text-pink-500 font-semibold flex items-center gap-1">
-              ← Buscar otro cliente
+              className="text-sm flex items-center gap-1 font-medium" style={{ color: 'var(--rose)' }}>
+              ← Buscar otro
             </button>
 
-            {/* Info cliente */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 text-center">
-              <div className="text-2xl font-black text-gray-800">{clienteActivo.nombre} {clienteActivo.apellido}</div>
-              <div className="text-gray-400 mt-1">{clienteActivo.telefono || 'Sin teléfono'}</div>
-              <div className="mt-4 text-5xl font-black text-pink-500">{formatearPeso(clienteActivo.saldo)}</div>
-              <div className="text-gray-400 text-sm mt-1">Saldo disponible</div>
-
-              {/* QR Code */}
-              <div className="mt-5 flex flex-col items-center">
-                <canvas ref={qrRef} className="rounded-xl" />
-                <p className="text-xs text-gray-400 mt-2">QR del cliente</p>
+            {/* Card cliente */}
+            <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--charcoal)' }}>
+              <div className="px-6 pt-6 pb-4">
+                <p className="text-xs tracking-widest uppercase mb-1" style={{ color: 'rgba(201,169,110,0.6)' }}>Cliente</p>
+                <h2 className="text-2xl text-white" style={{ fontFamily: 'var(--font-playfair)' }}>
+                  {clienteActivo.nombre} {clienteActivo.apellido}
+                </h2>
+                <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>{clienteActivo.telefono || 'Sin teléfono'}</p>
               </div>
+              <div className="mx-4 mb-4 rounded-xl px-5 py-4 flex items-center justify-between" style={{ background: 'rgba(192,88,110,0.25)', border: '1px solid rgba(192,88,110,0.3)' }}>
+                <span className="text-sm" style={{ color: 'rgba(255,255,255,0.6)' }}>Saldo disponible</span>
+                <span className="text-3xl font-bold" style={{ color: '#F2D0D8', fontFamily: 'var(--font-playfair)' }}>
+                  {formatearPeso(clienteActivo.saldo)}
+                </span>
+              </div>
+              <div className="flex justify-center pb-5">
+                <div className="bg-white rounded-xl p-3">
+                  <canvas ref={qrRef} className="rounded-lg block" />
+                </div>
+              </div>
+              <p className="text-center pb-4 text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Código QR del cliente</p>
             </div>
 
             {/* Cargar saldo */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-3">
-              <h2 className="font-bold text-gray-700 text-lg">Cargar saldo en efectivo</h2>
+            <div className="bg-white rounded-2xl border p-5 space-y-4" style={{ borderColor: 'var(--cream-dark)' }}>
+              <h2 className="font-semibold text-sm uppercase tracking-wide" style={{ color: 'var(--muted)', fontFamily: 'var(--font-playfair)' }}>
+                Cargar saldo — efectivo
+              </h2>
               <div className="grid grid-cols-3 gap-2">
                 {[100, 200, 300, 500, 1000, 2000].map(v => (
                   <button key={v} onClick={() => setMonto(String(v))}
-                    className={`py-3 rounded-xl font-bold text-lg border transition-all ${monto === String(v) ? 'bg-pink-500 text-white border-pink-500' : 'bg-gray-50 text-gray-700 border-gray-200 hover:border-pink-300'}`}>
+                    className="py-3 rounded-xl font-semibold transition-all border text-sm"
+                    style={monto === String(v)
+                      ? { background: 'var(--rose)', color: 'white', borderColor: 'var(--rose)' }
+                      : { background: 'var(--cream)', color: 'var(--charcoal)', borderColor: 'var(--cream-dark)' }}>
                     ${v}
                   </button>
                 ))}
               </div>
               <div className="flex gap-2">
                 <input
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  className={inputClass + ' flex-1 font-semibold text-lg'}
+                  style={{ borderColor: 'var(--cream-dark)', color: 'var(--charcoal)' }}
                   placeholder="Otro monto..."
                   type="number"
                   value={monto}
                   onChange={e => setMonto(e.target.value)}
                 />
                 <button onClick={cargarSaldo} disabled={cargando || !monto}
-                  className="bg-green-500 hover:bg-green-600 disabled:opacity-40 text-white font-bold px-5 rounded-xl transition-all active:scale-95 text-lg">
+                  className="px-6 rounded-xl font-semibold text-white transition-all active:scale-95 disabled:opacity-40"
+                  style={{ background: monto ? '#2E7D32' : 'var(--muted)' }}>
                   {cargando ? '...' : 'Cargar'}
                 </button>
               </div>

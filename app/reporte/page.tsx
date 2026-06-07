@@ -2,15 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import FlamingoLogo from '@/components/FlamingoLogo'
 import { supabase, formatearPeso } from '@/lib/supabase'
-
-type ResumenCliente = {
-  nombre: string
-  apellido: string
-  total_consumo: number
-  total_carga: number
-  saldo: number
-}
 
 type MovimientoDetalle = {
   id: string
@@ -32,15 +25,15 @@ export default function Reporte() {
 
   async function cargarReporte() {
     setCargando(true)
-    const { data: transacciones } = await supabase
+    const { data } = await supabase
       .from('transacciones')
       .select('*, clientes(nombre, apellido)')
       .eq('fecha', fecha)
       .order('created_at', { ascending: false })
 
-    if (transacciones) {
+    if (data) {
       let sumaCarga = 0, sumaConsumo = 0
-      const movs: MovimientoDetalle[] = transacciones.map((t: any) => {
+      const movs: MovimientoDetalle[] = data.map((t: any) => {
         if (t.tipo === 'carga') sumaCarga += t.monto
         else sumaConsumo += t.monto
         return {
@@ -60,65 +53,79 @@ export default function Reporte() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#f8f4f0' }}>
-      <div className="bg-slate-700 text-white px-5 py-4 flex items-center gap-3 shadow">
-        <Link href="/" className="text-white text-2xl">←</Link>
+    <div className="min-h-screen" style={{ background: 'var(--cream)' }}>
+      <div className="px-5 py-5 flex items-center gap-4 border-b" style={{ background: 'var(--charcoal)', borderColor: 'rgba(201,169,110,0.2)' }}>
+        <Link href="/" className="opacity-60 hover:opacity-100 transition-opacity">
+          <svg width="20" height="20" viewBox="0 0 20 20">
+            <path d="M12 4l-6 6 6 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+          </svg>
+        </Link>
+        <FlamingoLogo size={32} />
         <div>
-          <h1 className="font-bold text-xl">📊 Reporte del día</h1>
-          <p className="text-slate-300 text-sm">Resumen de ventas y movimientos</p>
+          <h1 className="text-white font-semibold tracking-widest text-sm uppercase" style={{ fontFamily: 'var(--font-playfair)' }}>Reporte</h1>
+          <p className="text-xs mt-0.5" style={{ color: 'rgba(201,169,110,0.7)' }}>Ventas del día</p>
         </div>
       </div>
 
-      <div className="p-4 max-w-lg mx-auto space-y-4">
-        {/* Selector de fecha */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-          <label className="block text-sm text-gray-500 mb-2 font-semibold">Fecha del reporte</label>
+      <div className="p-4 max-w-lg mx-auto space-y-4 pb-10">
+        {/* Selector fecha */}
+        <div className="bg-white rounded-2xl border p-4" style={{ borderColor: 'var(--cream-dark)' }}>
+          <label className="block text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: 'var(--muted)', fontFamily: 'var(--font-playfair)' }}>
+            Fecha
+          </label>
           <input type="date" value={fecha} onChange={e => setFecha(e.target.value)}
-            className="w-full border border-gray-200 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-slate-400" />
+            className="w-full rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 border"
+            style={{ borderColor: 'var(--cream-dark)', color: 'var(--charcoal)' }} />
         </div>
 
         {cargando ? (
-          <div className="text-center py-10 text-gray-400">Cargando...</div>
+          <div className="text-center py-14">
+            <FlamingoLogo size={40} className="mx-auto animate-pulse" />
+          </div>
         ) : (
           <>
-            {/* Resumen */}
+            {/* Métricas */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-green-50 border border-green-100 rounded-2xl p-4 text-center">
-                <div className="text-sm text-green-600 font-semibold mb-1">Total cargado</div>
-                <div className="text-2xl font-black text-green-600">{formatearPeso(totalCarga)}</div>
-                <div className="text-xs text-green-400 mt-1">efectivo recibido</div>
+              <div className="rounded-2xl p-5 border" style={{ background: 'white', borderColor: 'var(--cream-dark)' }}>
+                <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: '#2E7D32', fontFamily: 'var(--font-playfair)' }}>Cargado</p>
+                <p className="text-2xl font-bold" style={{ color: '#2E7D32', fontFamily: 'var(--font-playfair)' }}>{formatearPeso(totalCarga)}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>efectivo recibido</p>
               </div>
-              <div className="bg-pink-50 border border-pink-100 rounded-2xl p-4 text-center">
-                <div className="text-sm text-pink-600 font-semibold mb-1">Total consumo</div>
-                <div className="text-2xl font-black text-pink-500">{formatearPeso(totalConsumo)}</div>
-                <div className="text-xs text-pink-400 mt-1">vendido en el bar</div>
+              <div className="rounded-2xl p-5 border" style={{ background: 'white', borderColor: 'var(--cream-dark)' }}>
+                <p className="text-xs uppercase tracking-widest font-semibold mb-2" style={{ color: 'var(--rose)', fontFamily: 'var(--font-playfair)' }}>Consumo</p>
+                <p className="text-2xl font-bold" style={{ color: 'var(--rose)', fontFamily: 'var(--font-playfair)' }}>{formatearPeso(totalConsumo)}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>vendido en bar</p>
               </div>
             </div>
 
-            <div className="bg-slate-700 text-white rounded-2xl p-4 text-center">
-              <div className="text-slate-300 text-sm">Saldo pendiente (no consumido)</div>
-              <div className="text-3xl font-black mt-1">{formatearPeso(totalCarga - totalConsumo)}</div>
+            <div className="rounded-2xl px-5 py-4 flex items-center justify-between" style={{ background: 'var(--charcoal)' }}>
+              <span className="text-xs uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-playfair)' }}>Saldo pendiente</span>
+              <span className="text-2xl font-bold" style={{ color: '#F2D0D8', fontFamily: 'var(--font-playfair)' }}>{formatearPeso(totalCarga - totalConsumo)}</span>
             </div>
 
-            {/* Lista de movimientos */}
+            {/* Detalle */}
             {movimientos.length === 0 ? (
-              <div className="text-center py-10 text-gray-400">
-                <div className="text-4xl mb-3">📭</div>
-                No hay movimientos en esta fecha
+              <div className="text-center py-14">
+                <FlamingoLogo size={48} className="mx-auto mb-4 opacity-30" />
+                <p className="text-sm" style={{ color: 'var(--muted)' }}>Sin movimientos en esta fecha</p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                <h2 className="font-bold text-gray-700 mb-3">Detalle ({movimientos.length} movimientos)</h2>
-                <div className="space-y-2">
+              <div className="bg-white rounded-2xl border p-5" style={{ borderColor: 'var(--cream-dark)' }}>
+                <p className="text-xs uppercase tracking-widest font-semibold mb-4" style={{ color: 'var(--muted)', fontFamily: 'var(--font-playfair)' }}>
+                  Detalle — {movimientos.length} movimientos
+                </p>
+                <div className="space-y-3">
                   {movimientos.map(m => (
-                    <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                    <div key={m.id} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor: 'var(--cream-dark)' }}>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-gray-800 truncate">{m.cliente_nombre}</div>
-                        <div className="text-xs text-gray-400">{m.descripcion || m.tipo} · {new Date(m.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</div>
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--charcoal)' }}>{m.cliente_nombre}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
+                          {m.descripcion || m.tipo} · {new Date(m.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
-                      <div className={`font-bold ml-3 ${m.tipo === 'carga' ? 'text-green-500' : 'text-red-500'}`}>
-                        {m.tipo === 'carga' ? '+' : '-'}{formatearPeso(m.monto)}
-                      </div>
+                      <span className="font-semibold text-sm ml-3" style={{ color: m.tipo === 'carga' ? '#2E7D32' : 'var(--rose)' }}>
+                        {m.tipo === 'carga' ? '+' : '−'}{formatearPeso(m.monto)}
+                      </span>
                     </div>
                   ))}
                 </div>
