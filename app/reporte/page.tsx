@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import FlamingoLogo from '@/components/FlamingoLogo'
+import PinGuard from '@/components/PinGuard'
 import { supabase, formatearPeso } from '@/lib/supabase'
 
 type MovimientoDetalle = {
@@ -14,7 +15,7 @@ type MovimientoDetalle = {
   created_at: string
 }
 
-export default function Reporte() {
+function Reporte() {
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
   const [totalCarga, setTotalCarga] = useState(0)
   const [totalConsumo, setTotalConsumo] = useState(0)
@@ -136,4 +137,8 @@ export default function Reporte() {
       </div>
     </div>
   )
+}
+
+export default function ReportePage() {
+  return <PinGuard><Reporte /></PinGuard>
 }

@@ -70,6 +70,18 @@ export default function Home() {
             </div>
             <div className="ml-auto text-white/40 text-xl">›</div>
           </Link>
+
+          <Link href="/admin" className="flex items-center gap-4 rounded-2xl p-4 transition-all active:scale-95 border border-white/8 hover:border-white/20"
+            style={{ background: 'rgba(255,255,255,0.04)' }}>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl bg-white/8">
+              ⚙️
+            </div>
+            <div>
+              <div className="text-sm font-medium tracking-wide" style={{ color: 'rgba(255,255,255,0.6)' }}>Administración</div>
+              <div className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.30)' }}>Eventos · PIN · Configuración</div>
+            </div>
+            <div className="ml-auto text-white/20 text-lg">›</div>
+          </Link>
         </div>
 
         <p className="mt-14 text-xs tracking-widest uppercase" style={{ color: 'rgba(201,169,110,0.4)' }}>

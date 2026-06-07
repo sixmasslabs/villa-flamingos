@@ -4,11 +4,12 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import QRCode from 'qrcode'
 import FlamingoLogo from '@/components/FlamingoLogo'
+import PinGuard from '@/components/PinGuard'
 import { supabase, generarCodigo, formatearPeso, type Cliente } from '@/lib/supabase'
 
 type Vista = 'buscar' | 'nuevo' | 'cliente'
 
-export default function Caja() {
+function Caja() {
   const [vista, setVista] = useState<Vista>('buscar')
   const [busqueda, setBusqueda] = useState('')
   const [clientes, setClientes] = useState<Cliente[]>([])
@@ -268,4 +269,8 @@ export default function Caja() {
       </div>
     </div>
   )
+}
+
+export default function CajaPage() {
+  return <PinGuard><Caja /></PinGuard>
 }
